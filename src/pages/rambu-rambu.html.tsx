@@ -58,7 +58,7 @@ const Rambu_rambu: React.FC = () => {
             </thead>
             <tbody>
                 {data.map((list, index) => (
-                    <tr>
+                    <tr key={`dfa${index}`}>
                         <td>{index + 1}</td>
                         <td>
                             <img style={{ width: "70px" }} src={baseUrl("images/rambu-rambu?size=100&source=" + list.id_rambu)} />

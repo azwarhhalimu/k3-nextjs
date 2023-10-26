@@ -67,7 +67,7 @@ const Pengertian: React.FC = () => {
                     </thead>
                     <tbody>
                         {data.map((list, index) => (
-                            <tr>
+                            <tr key={`dfa${index}`}>
                                 <td>{index + 1}</td>
                                 <td>
                                     <img
