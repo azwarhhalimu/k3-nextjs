@@ -1,3 +1,4 @@
+import LoadingTable from "@/componen/LoadingTable";
 import NoData from "@/componen/NoData";
 import MenuAktif from "@/utils/MenuAktif";
 import { baseUrl } from "@/utils/config";
@@ -11,14 +12,18 @@ interface data {
 }
 const Slide_banner: React.FC = () => {
     const [data, setData] = useState<data[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
     const [reload, setReload] = useState<number>(0);
     const _getData = () => {
+        setLoading(true);
         axios.get(baseUrl("admin/slide-show"))
             .then((respon: AxiosResponse<any, any>) => {
                 setData(respon.data.data);
+                setLoading(false);
             })
     }
     const _delete = (id: string) => {
+
         const confir: boolean = window.confirm("Apakah anda ingin hapus data ini ?");
         if (confir)
             axios.delete(baseUrl("admin/slide-show/" + id))
@@ -57,7 +62,7 @@ const Slide_banner: React.FC = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((list, index) => (
+                    {(loading && data.length == 0) ? <LoadingTable baris={8} kolom={4} /> : data.map((list, index) => (
                         <tr key={`dfa${index}`}>
                             <td>{index + 1}</td>
                             <td>
@@ -75,7 +80,7 @@ const Slide_banner: React.FC = () => {
 
                 </tbody>
             </table>
-            {data.length == 0 && <NoData pesan="Data masih kosong" />}
+            {(data.length == 0 && !loading) && <NoData pesan="Data masih kosong" />}
         </div>
     </>);
 }

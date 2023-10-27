@@ -1,3 +1,5 @@
+import LoadingTable from "@/componen/LoadingTable";
+import NoData from "@/componen/NoData";
 import MenuAktif from "@/utils/MenuAktif";
 import { baseUrl } from "@/utils/config";
 import axios, { AxiosResponse } from "axios";
@@ -14,9 +16,12 @@ interface data {
 const Rambu_rambu: React.FC = () => {
     const [data, setData] = useState<data[]>([])
     const [reload, setReload] = useState<number>(0);
+    const [loading, setLoading] = useState<boolean>(false);
     const _getData = () => {
+        setLoading(true);
         axios.get(baseUrl("admin/rambu-rambu")).then((respon: AxiosResponse<any, any>) => {
             setData(respon.data.data);
+            setLoading(false);
         })
     }
     const _deleteData = (id: string) => {
@@ -57,7 +62,7 @@ const Rambu_rambu: React.FC = () => {
                 </tr>
             </thead>
             <tbody>
-                {data.map((list, index) => (
+                {(loading && data.length == 0) ? <LoadingTable baris={10} kolom={4} /> : data.map((list, index) => (
                     <tr key={`dfa${index}`}>
                         <td>{index + 1}</td>
                         <td>
@@ -76,6 +81,7 @@ const Rambu_rambu: React.FC = () => {
 
             </tbody>
         </table>
+        {(data.length == 0 && !loading) && <NoData pesan={"Data kosong"} />}
     </>);
 }
 

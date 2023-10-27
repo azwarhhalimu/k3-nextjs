@@ -1,3 +1,4 @@
+import LoadingTable from "@/componen/LoadingTable";
 import NoData from "@/componen/NoData";
 import MenuAktif from "@/utils/MenuAktif";
 import { baseUrl } from "@/utils/config";
@@ -15,10 +16,13 @@ interface iData {
 const Peralatan: React.FC = () => {
     const [data, setData] = useState<iData[]>([]);
     const [reload, setReload] = useState<number>(0);
+    const [loading, setLoading] = useState<boolean>(false);
     const _getPeralatan = () => {
+        setLoading(true);
         axios.get(baseUrl("admin/peralatan"))
             .then((respon: AxiosResponse<any, any>) => {
                 setData(respon.data.data);
+                setLoading(false);
             });
     }
     const _deletePeralatan = (id: string) => {
@@ -70,7 +74,7 @@ const Peralatan: React.FC = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((list, index) => (
+                    {(loading && data.length == 0) ? <LoadingTable baris={10} kolom={5} /> : data.map((list, index) => (
                         <tr key={`dfda${index}`}>
                             <td>
                                 <button>Edit</button>
@@ -90,7 +94,7 @@ const Peralatan: React.FC = () => {
 
                 </tbody>
             </table>
-            {data.length == 0 && <NoData pesan={"Data masih kosong"} />}
+            {(data.length == 0 && !loading) && <NoData pesan={"Data masih kosong"} />}
         </div>
     </>);
 }
