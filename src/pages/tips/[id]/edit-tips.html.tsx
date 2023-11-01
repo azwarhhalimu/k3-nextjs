@@ -6,8 +6,8 @@ import Head from 'next/head';
 import Link from 'next/link';
 import router from 'next/router';
 import queryString from 'query-string';
-import React, { ChangeEvent, FormEvent, useRef, useState } from 'react';
-const Tambah_tips: React.FC = () => {
+import React, { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
+const Edit_tips: React.FC = () => {
     const [judul, setJudul] = useState<string>("");
     const [deskripsi, setDeskripsi] = useState<string>("");
     const _saveData = (e: FormEvent) => {
@@ -16,24 +16,61 @@ const Tambah_tips: React.FC = () => {
 
         axios.post(baseUrl("admin/tips"),
             queryString.stringify({
+                id_tips: data_url[2],
                 judul: judul,
                 deskripsi: editorRef.current.getContent(),
             }),
             {
                 headers: {
-                    Authorization: tokenCreate(),
+                    "Authorization": tokenCreate(),
                 }
             }
-
         ).then((respon: AxiosResponse<any, any>) => {
-            if (respon.data.status == "sukses") {
-                alert("Data sukses di simpan");
-                router.push("/tips.html")
+            if (respon.data.status != "not_authorization") {
+                if (respon.data.status == "sukses") {
+                    alert("Data tips berhasil di simpan");
+                    router.push("/tips.html");
+                }
             }
+            else {
+                alert("Token tidak benar")
+                router.push("/login.html");
+            }
+
         })
 
     }
     const editorRef = useRef<any>(null);
+    const data_url: string[] | [] = typeof window !== "undefined" ? window.location.pathname.split("/") : [];
+    const getDAta = () => {
+        axios.get(baseUrl("admin/tips/" + data_url[2]), {
+            headers: {
+                Authorization: tokenCreate(),
+            }
+        })
+            .then((respon: AxiosResponse<any, any>) => {
+                if (respon.data.status != "not_authorization") {
+                    if (respon.data.status != "not_authorization") {
+                        setJudul(respon.data.data.judul);
+                        setDeskripsi(respon.data.data.deskripsi);
+                    }
+                    else {
+                        alert("Token tidak benar")
+                        router.push("/login.html");
+                    }
+
+
+                }
+                else {
+                    alert("Token tidak benar")
+                    router.push("/login.html");
+                }
+
+            })
+    }
+    useEffect(() => {
+        getDAta();
+    }, [])
 
     return (<>
         <Head>
@@ -43,7 +80,7 @@ const Tambah_tips: React.FC = () => {
             <span><Link href="/">Dashboard</Link></span>
             <span><Link href="/">Tips</Link></span>
 
-            <span>Tambah Tips</span>
+            <span>Edit Tips</span>
         </div>
         <div>
             <button
@@ -53,13 +90,13 @@ const Tambah_tips: React.FC = () => {
                 className="btn btn-danger">Kembali</button>
         </div>
         <br />
-        <h2 className="az-content-title">Tambah Data Tips</h2>
+        <h2 className="az-content-title">Edit Data Tips</h2>
         <div className='row'>
             <div className='col-6' style={{ margin: "auto" }}>
                 <form onSubmit={_saveData}>
                     <div className="mb-3">
                         <label htmlFor="exampleInputEmail1" className="form-label">Judul Tips</label>
-                        <input onChange={(e) => {
+                        <input value={judul} onChange={(e) => {
                             setJudul(e.target.value);
                         }} required type="text" placeholder='Contoh : Tips Menggunakan Helm' className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" />
                         <div id="emailHelp" className="form-text">Masukkan judul tips.</div>
@@ -70,7 +107,7 @@ const Tambah_tips: React.FC = () => {
                             apiKey="vey2226sscpy44f23ngqtzej83xdwbmc0u7tyy2snygmddb8"
                             onInit={(evt, editor) => editorRef.current = editor}
 
-                            initialValue=""
+                            initialValue={deskripsi}
                             init={{
                                 height: 200,
                                 menubar: false,
@@ -97,4 +134,4 @@ const Tambah_tips: React.FC = () => {
     </>);
 }
 
-export default Tambah_tips;
+export default Edit_tips;

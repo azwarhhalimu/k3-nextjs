@@ -1,9 +1,11 @@
 import LoadingTable from "@/componen/LoadingTable";
 import NoData from "@/componen/NoData";
+import tokenCreate from "@/componen/tokenCreate";
 import MenuAktif from "@/utils/MenuAktif";
 import { useMenu } from "@/utils/MenuContext";
 import { baseUrl } from "@/utils/config";
 import axios, { AxiosResponse } from "axios";
+import Head from "next/head";
 import Link from "next/link";
 import { NextRouter, useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -22,17 +24,38 @@ const Pengertian: React.FC = () => {
     const router: NextRouter = useRouter();
     const _getData = () => {
         setLoading(true);
-        axios.get(baseUrl("admin/pengertian"))
+        axios.get(baseUrl("admin/pengertian"), {
+            headers: {
+                Authorization: tokenCreate(),
+            }
+        })
             .then((respon: AxiosResponse<any, any>) => {
-                setData(respon.data.data);
+                if (respon.data.status != "not_authorization")
+                    setData(respon.data.data);
+                else {
+                    alert("Token tidak benar")
+                    router.push("/login.html");
+                }
+
             })
     }
     const _deleteData = (id: string) => {
-        axios.delete(baseUrl("admin/pengertian/" + id))
+        axios.delete(baseUrl("admin/pengertian/" + id), {
+            headers: {
+                Authorization: tokenCreate(),
+            }
+        })
             .then((respon: AxiosResponse<any, any>) => {
-                if (respon.data.status == "deleted") {
-                    alert("Derhasil di hapus");
-                    setReload(reload + 1);
+                if (respon.data.status != "not_authorization") {
+                    if (respon.data.status == "deleted") {
+                        alert("Derhasil di hapus");
+                        setReload(reload + 1);
+                    }
+                }
+
+                else {
+                    alert("Token tidak benar")
+                    router.push("/login.html");
                 }
             })
 
@@ -43,6 +66,10 @@ const Pengertian: React.FC = () => {
 
     }, [reload])
     return (<>
+        <Head>
+
+            <title>Pengertian</title>
+        </Head>
         <MenuAktif menu="pengertian" />
         <div>
             <div className="az-content-breadcrumb">
@@ -89,7 +116,9 @@ const Pengertian: React.FC = () => {
                                         }
 
                                     }}>Hapus</button>{" "}
-                                    <button>Edit</button>
+                                    <button onClick={() => {
+                                        router.push("/pengertian/" + list.id_pengertian + "/edit-pengertian.html")
+                                    }}>Edit</button>
                                 </td>
                             </tr>
                         ))}

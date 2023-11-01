@@ -1,8 +1,10 @@
 import LoadingTable from "@/componen/LoadingTable";
 import NoData from "@/componen/NoData";
+import tokenCreate from "@/componen/tokenCreate";
 import MenuAktif from "@/utils/MenuAktif";
 import { baseUrl } from "@/utils/config";
 import axios, { AxiosResponse } from "axios";
+import Head from "next/head";
 import Link from "next/link";
 import router from "next/router";
 import { useEffect, useState } from "react";
@@ -16,10 +18,16 @@ const Slide_banner: React.FC = () => {
     const [reload, setReload] = useState<number>(0);
     const _getData = () => {
         setLoading(true);
-        axios.get(baseUrl("admin/slide-show"))
+        axios.get(baseUrl("admin/slide-show"), {
+            headers: {
+                Authorization: tokenCreate(),
+            }
+        })
             .then((respon: AxiosResponse<any, any>) => {
-                setData(respon.data.data);
-                setLoading(false);
+                if (respon.data.data.length > 0) {
+                    setData(respon.data.data);
+                    setLoading(false);
+                }
             })
     }
     const _delete = (id: string) => {
@@ -36,6 +44,9 @@ const Slide_banner: React.FC = () => {
     }
     useEffect(() => { _getData() }, [reload])
     return (<>
+        <Head>
+            <title>Slide Show</title>
+        </Head>
         <MenuAktif menu="slide-show" />
         <div>
             <div className="az-content-breadcrumb">

@@ -1,8 +1,10 @@
 import LoadingTable from "@/componen/LoadingTable";
 import NoData from "@/componen/NoData";
+import tokenCreate from "@/componen/tokenCreate";
 import MenuAktif from "@/utils/MenuAktif";
 import { baseUrl } from "@/utils/config";
 import axios, { AxiosResponse } from "axios";
+import Head from "next/head";
 import Link from "next/link";
 import router from "next/router";
 import React, { useEffect, useState } from "react";
@@ -19,20 +21,43 @@ const Rambu_rambu: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const _getData = () => {
         setLoading(true);
-        axios.get(baseUrl("admin/rambu-rambu")).then((respon: AxiosResponse<any, any>) => {
-            setData(respon.data.data);
-            setLoading(false);
+        axios.get(baseUrl("admin/rambu-rambu"), {
+            headers: {
+                Authorization: tokenCreate(),
+            }
+        }).then((respon: AxiosResponse<any, any>) => {
+            if (respon.data.status != "not_authorization") {
+                setData(respon.data.data);
+                setLoading(false);
+            }
+            else {
+                alert("Token tidak benar")
+                router.push("/login.html");
+            }
+
         })
     }
     const _deleteData = (id: string) => {
         const confirm: boolean = window.confirm("Apakah anda ingin menghapus dat ini?");
         if (confirm)
-            axios.delete(baseUrl("admin/rambu-rambu/" + id))
+            axios.delete(baseUrl("admin/rambu-rambu/" + id), {
+                headers: {
+                    Authorization: tokenCreate(),
+                }
+
+            })
                 .then((respon: AxiosResponse<any, any>) => {
-                    if (respon.data.status == "data_terhapus") {
-                        setReload(reload + 1);
-                        alert("Data berhasil di hapus");
+                    if (respon.data.status != "not_authorization") {
+                        if (respon.data.status == "data_terhapus") {
+                            setReload(reload + 1);
+                            alert("Data berhasil di hapus");
+                        }
                     }
+                    else {
+                        alert("Token tidak benar")
+                        router.push("/login.html");
+                    }
+
                 })
     }
     useEffect(() => {
@@ -40,6 +65,7 @@ const Rambu_rambu: React.FC = () => {
     }, [reload])
     return (<>
 
+        <Head><title>Rambu-rambu</title></Head>
         <MenuAktif menu="rambu" />
         <div className="az-content-breadcrumb">
             <span><Link href="/">Dashboard</Link></span>
@@ -70,7 +96,9 @@ const Rambu_rambu: React.FC = () => {
                         </td>
                         <td>{list.nama_rambu}</td> <td dangerouslySetInnerHTML={{ __html: list.deskripsi }}></td>
                         <td>
-                            <button className="btn btn-warning">Edit</button>
+                            <button onClick={() => {
+                                router.push("/rambu-rambu/" + list.id_rambu + "/edit-rambu.html");
+                            }} className="btn btn-warning">Edit</button>
                             {" "}
                             <button onClick={() => {
                                 _deleteData(list.id_rambu)

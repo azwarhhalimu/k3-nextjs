@@ -1,8 +1,10 @@
 import LoadingTable from "@/componen/LoadingTable";
 import NoData from "@/componen/NoData";
+import tokenCreate from "@/componen/tokenCreate";
 import MenuAktif from "@/utils/MenuAktif";
 import { baseUrl } from "@/utils/config";
 import axios, { AxiosResponse } from "axios";
+import Head from "next/head";
 import Link from "next/link";
 import router from "next/router";
 import { useEffect, useState } from "react";
@@ -18,20 +20,40 @@ const Tips: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const _getData = () => {
         setLoading(true);
-        ; axios.get(baseUrl("admin/tips"))
+        axios.get(baseUrl("admin/tips"), {
+            headers: {
+                Authorization: tokenCreate(),
+            }
+        })
             .then((respon: AxiosResponse<any, any>) => {
-                setData(respon.data.data);
-                setLoading(false);
+                if (respon.data.status != "not_authorization") {
+                    setData(respon.data.data);
+                    setLoading(false);
+                }
+                else {
+                    alert("Token tidak benar")
+                    router.push("/login.html");
+                }
             })
     }
     const _deleteData = (id: string) => {
         const confirm: boolean = window.confirm("Apakah anda ingin menghapus data ini ?");
         if (confirm)
-            axios.delete(baseUrl("admin/tips/" + id))
+            axios.delete(baseUrl("admin/tips/" + id), {
+                headers: {
+                    Authorization: tokenCreate(),
+                }
+            })
                 .then((respon: AxiosResponse<any, any>) => {
-                    if (respon.data.status == "data_deleted") {
-                        alert("Data terhapus");
-                        setReload(reload + 1);
+                    if (respon.data.status != "not_authorization") {
+                        if (respon.data.status == "data_deleted") {
+                            alert("Data terhapus");
+                            setReload(reload + 1);
+                        }
+                    }
+                    else {
+                        alert("Token tidak benar")
+                        router.push("/login.html");
                     }
                 })
     }
@@ -39,6 +61,9 @@ const Tips: React.FC = () => {
         _getData();
     }, [reload])
     return (<>
+        <Head>
+            <title>Tips Keselamatan</title>
+        </Head>
         <MenuAktif menu="tips" />
         <div className="az-content-breadcrumb">
             <span><Link href="/">Dashboard</Link></span>
@@ -82,7 +107,9 @@ const Tips: React.FC = () => {
                             </td>
 
                             <td style={{ textAlign: "right" }} width={"200px"}>
-                                <button className="btn btn-warning btn sm">Edit</button>
+                                <button onClick={() => {
+                                    router.push("/tips/" + list.id_tips + "/edit-tips.html");
+                                }} className="btn btn-warning btn sm">Edit</button>
                                 {" "}
                                 <button onClick={() => {
                                     _deleteData(list.id_tips)

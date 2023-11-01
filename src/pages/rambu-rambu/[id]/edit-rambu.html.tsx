@@ -1,20 +1,22 @@
 import { Editor } from '@tinymce/tinymce-react';
 import Link from "next/link";
 import router from "next/router";
-import { ChangeEvent, FormEvent, useRef, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
 
 
 import Cropper from "react-cropper";
 import "cropperjs/dist/cropper.css";
-import axios, { AxiosResponse } from 'axios';
+import axios, { Axios, AxiosResponse } from 'axios';
 import { baseUrl } from '@/utils/config';
+import Height from '@/componen/Height';
 import tokenCreate from '@/componen/tokenCreate';
 
 
-const Tambah_peralatan: React.FC = () => {
+const Edit_rambu_rambu: React.FC = () => {
     const editorRef = useRef<any>(null);
 
-    const [namaPeralatan, setNamaPeralatan] = useState<string>("");
+    const [namaRambu, setNamaRambu] = useState<string>("");
+    const [deskripsi, setDeskripsi] = useState<string>("");
 
     const [src, setSrc] = useState<any>();
     const [width, setWidth] = useState<any>();
@@ -23,12 +25,15 @@ const Tambah_peralatan: React.FC = () => {
     const [img, setImg] = useState<any>();
     const [y, setY] = useState<any>();
 
+    const [warna, setWarna] = useState<string>("");
 
     const _save = (e: FormEvent) => {
         e.preventDefault();
 
         const formData: FormData = new FormData();
-        formData.append("nama_peralatan", namaPeralatan);
+        formData.append("id_rambu", url[2]);
+        formData.append("nama_rambu", namaRambu);
+        formData.append("warna", warna);
         formData.append("deskripsi", editorRef.current.getContent());
         formData.append("x", x);
         formData.append("y", y);
@@ -36,62 +41,97 @@ const Tambah_peralatan: React.FC = () => {
         formData.append("height", height);
         formData.append("foto", img);
 
-        axios.post(baseUrl("admin/peralatan"),
+        axios.post(baseUrl("admin/rambu-rambu"),
             formData,
             {
                 headers: {
                     "Content-Type": "multipart/form-data",
-                    "Authorization": tokenCreate(),
+                    Authorization: tokenCreate(),
                 }
             }
         ).then((respon: AxiosResponse<any, any>) => {
-            if (respon.data.status != "not_authorization") {
-                if (respon.data.status == "data_saved") {
-                    alert("Data berhasil disimpan");
-                    router.push("/peralatan.html");
-                }
-            }
-            else {
-                alert("Token tidak benar")
-                router.push("/login.html");
+
+            if (respon.data.status == "data_saved") {
+                alert("Data berhasil disimpan");
+                router.push("/rambu-rambu.html");
             }
         })
     }
 
+
+    const url: string[] | [] = typeof window !== "undefined" ? window.location.pathname.split("/") : [];
+
+    const _getData = () => {
+        axios.get(baseUrl("admin/rambu-rambu/" + url[2]), {
+            headers: {
+                Authorization: tokenCreate(),
+            }
+        })
+            .then((respon: AxiosResponse<any, any>) => {
+                if (respon.data.status != "not_authorization") {
+                    setNamaRambu(respon.data.data.nama_rambu);
+                    setWarna(respon.data.data.warna);
+                    setDeskripsi(respon.data.data.deskripsi);
+                }
+                else {
+                    alert("Token tidak benar")
+                    router.push("/login.html");
+                }
+
+            })
+
+    }
+    useEffect(() => {
+        _getData();
+    }, [])
     return (<><div>
         <div className="az-content-breadcrumb">
             <span><Link href="/">Dashboard</Link></span>
-            <span><Link href="/peralatan.html">Peralatan</Link></span>
+            <span><Link href="/">Rambu-rambu</Link></span>
+            <span><Link href="/tam.html">Tmbah Rambu</Link></span>
 
-            <span>Tambah Data Peralantan Keselamatan Kerja</span>
+            <span>Edit Data Rambu-rambu Keselamatan Kerja</span>
         </div>
         <div>
             <button
                 onClick={() => {
-                    router.push("/peralatan.html")
+                    router.push("/rambu-rambu.html")
                 }}
-                className="btn btn-primary ">Kembali</button>
+                className="btn btn-danger ">Kembali</button>
         </div>
         <br />
-        <h2 className="az-content-title">Tambah Data Pelatan Keselamatan Kerja</h2>
+        <h2 className="az-content-title">Edit Data Pelatan Keselamatan Kerja</h2>
     </div>
-
         <div className="container">
             <div className="row">
                 <div className="col-6">
                     <form onSubmit={_save}>
                         <div className="mb-3">
-                            <label htmlFor="exampleInputEmail1" className="form-label">Nama Peralatan</label>
-                            <input onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                                setNamaPeralatan(e.target.value)
+                            <label htmlFor="exampleInputEmail1" className="form-label">Nama Rambu</label>
+                            <input value={namaRambu} onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                setNamaRambu(e.target.value)
                             }} type="text" placeholder="Misal Helm" className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" />
                             <div id="emailHelp" className="form-text">Masukkan nama peralatan K3</div>
                         </div>
+
+                        <div className="mb-3">
+                            <label htmlFor="exampleInputEmail1" className="form-label">Warna Rambu</label>
+                            <select value={warna} required onChange={(e) => {
+                                setWarna(e.target.value);
+                            }} className='form-control'>
+                                <option value="">Pilih Warna Rambu</option>
+                                <option value="Merah">Merah</option>
+                                <option value="Kuning">Kuning</option>
+                                <option value="Jingga">Jingga</option>
+                            </select>
+                        </div>
+
+
                         <Editor
                             apiKey="vey2226sscpy44f23ngqtzej83xdwbmc0u7tyy2snygmddb8"
                             onInit={(evt, editor) => editorRef.current = editor}
 
-                            initialValue=""
+                            initialValue={deskripsi}
                             init={{
                                 height: 300,
                                 menubar: false,
@@ -126,7 +166,8 @@ const Tambah_peralatan: React.FC = () => {
                             // setCrop(true);
                         }}
                             accept="image/png, image/gif, image/jpeg"
-                            type="file" required />
+                            type="file" />
+                        <Height height={30} />
                         <button type="submit" className="btn btn-primary">Submit</button>
                     </form>
 
@@ -165,4 +206,4 @@ const Tambah_peralatan: React.FC = () => {
     </>);
 }
 
-export default Tambah_peralatan;
+export default Edit_rambu_rambu;

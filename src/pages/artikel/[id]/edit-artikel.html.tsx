@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Editor } from '@tinymce/tinymce-react';
-import { ChangeEvent, EventHandler, FormEvent, useRef, useState } from "react";
+import { ChangeEvent, EventHandler, FormEvent, useEffect, useRef, useState } from "react";
 import Height from "@/componen/Height";
 
 import Cropper from "react-cropper";
@@ -10,10 +10,12 @@ import "cropperjs/dist/cropper.css";
 import axios from "axios";
 import { baseUrl } from "@/utils/config";
 import { AxiosResponse } from "axios";
+import Head from "next/head";
+import MenuAktif from "@/utils/MenuAktif";
 import tokenCreate from "@/componen/tokenCreate";
 
 
-const Tambah_artikel: React.FC = () => {
+const Edit_artikel: React.FC = () => {
     const editorRef = useRef<any>(null);
 
     const [src, setSrc] = useState<any>();
@@ -29,8 +31,10 @@ const Tambah_artikel: React.FC = () => {
 
 
     const _saveArtikel = (e: FormEvent) => {
+
         e.preventDefault();
         const formData: FormData = new FormData();
+        formData.append("id_artikel", dataUrl[2]);
         formData.append("judul", judul);
         formData.append("post_by", post_by);
         formData.append("isi", editorRef.current.getContent());
@@ -47,19 +51,57 @@ const Tambah_artikel: React.FC = () => {
             }
         }).then
             ((respon: AxiosResponse<any, any>) => {
+
                 if (respon.data.status != "not_authorization") {
                     if (respon.data.status == "data_saved") {
-                        alert("Data berhasil di simpan");
-                        router.push("/artikel.html")
+                        if (respon.data.status == "data_saved") {
+                            alert("Data berhasil di simpan");
+                            router.push("/artikel.html")
+                        }
                     }
                 }
                 else {
                     alert("Token tidak benar")
                     router.push("/login.html");
                 }
+
+
             });
     }
+
+    const dataUrl: string[] | [] = typeof window !== "undefined" ? window.location.pathname.split("/") : [];
+
+
+    const [deskripsi, setDeskripsi] = useState("");
+    const getData = () => {
+
+        axios.get(baseUrl("admin/artikel/" + dataUrl[2]), {
+            headers: {
+                "Authorization": tokenCreate()
+            }
+        })
+            .then((respon: AxiosResponse<any, any>) => {
+                if (respon.data.status != "not_authorization") {
+                    setJudul(respon.data.data.judul);
+                    setPost_by(respon.data.data.post_by);
+                    setDeskripsi(respon.data.data.isi);
+                }
+                else {
+                    alert("Token tidak benar")
+                    router.push("/login.html");
+                }
+
+
+            })
+    }
+    useEffect(() => {
+        getData();
+    }, []);
     return (<>
+        <MenuAktif menu="aritkel" />
+        <Head>
+            <title>Edit Artikel</title>
+        </Head>
         <div className="az-content-breadcrumb">
             <span><Link href="/">Dashboard</Link></span>
 
@@ -74,21 +116,21 @@ const Tambah_artikel: React.FC = () => {
                 router.push("/artikel.html")
             }}
             className="btn btn-danger ">Kembali</button>
-        <h2 className="az-content-title">Tambah Artikel</h2>
+        <h2 className="az-content-title">Edit Artikel</h2>
         <div className="row">
             <div className="col-7">
                 <form onSubmit={_saveArtikel}>
                     <div>
                         <div className="form-group">
                             <label htmlFor="exampleInputEmail1">Judul Artikel</label>
-                            <input required onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                            <input value={judul} required onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                 setJudul(e.target.value)
                             }} type="text" className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Contoh : Aturan Pemerintah tentang Ketenaga kerjaan" />
                             <small id="emailHelp" className="form-text text-muted">Masukkan judul artike bertema keselamatan kerja</small>
                         </div>
                         <div className="form-group">
                             <label htmlFor="exampleInputEmail1">Post By</label>
-                            <input required onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                            <input value={post_by} required onChange={(e: ChangeEvent<HTMLInputElement>) => {
                                 setPost_by(e.target.value)
                             }} type="text" className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Misal : Jhon Die" />
                             <small id="emailHelp" className="form-text text-muted">Nama pemosting</small>
@@ -98,7 +140,7 @@ const Tambah_artikel: React.FC = () => {
                             apiKey="vey2226sscpy44f23ngqtzej83xdwbmc0u7tyy2snygmddb8"
                             onInit={(evt, editor) => editorRef.current = editor}
 
-                            initialValue=""
+                            initialValue={deskripsi}
                             init={{
                                 height: 300,
                                 menubar: false,
@@ -134,7 +176,7 @@ const Tambah_artikel: React.FC = () => {
                             // setCrop(true);
                         }}
                             accept="image/png, image/gif, image/jpeg"
-                            type="file" required />
+                            type="file" />
                         <Height height={50} />
                         <button type="submit" className="btn btn-primary">Simpan</button>
 
@@ -175,4 +217,4 @@ const Tambah_artikel: React.FC = () => {
     </>);
 }
 
-export default Tambah_artikel;
+export default Edit_artikel;

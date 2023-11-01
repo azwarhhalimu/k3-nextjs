@@ -10,6 +10,7 @@ import "cropperjs/dist/cropper.css";
 import Height from "@/componen/Height";
 import axios, { AxiosResponse } from "axios";
 import { baseUrl } from "@/utils/config";
+import tokenCreate from "@/componen/tokenCreate";
 
 const Tambah_slide_show: React.FC = () => {
 
@@ -35,7 +36,8 @@ const Tambah_slide_show: React.FC = () => {
         formData.append("foto", img);
         axios.post(baseUrl("admin/slide-show"), formData, {
             headers: {
-                "Content-Type": "multipart/form-data"
+                "Content-Type": "multipart/form-data",
+                Authorization: tokenCreate(),
             }
         })
             .then((respon: AxiosResponse<any, any>) => {

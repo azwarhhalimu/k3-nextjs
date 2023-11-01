@@ -1,22 +1,22 @@
 import { Editor } from '@tinymce/tinymce-react';
 import Link from "next/link";
 import router from "next/router";
-import { ChangeEvent, FormEvent, useRef, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
 
 
 import Cropper from "react-cropper";
 import "cropperjs/dist/cropper.css";
-import axios, { AxiosResponse } from 'axios';
-import { baseUrl } from '@/utils/config';
-import Rambu_rambu from '../rambu-rambu.html';
+import axios, { Axios, AxiosResponse } from 'axios';
+import { baseUrl } from '@/utils/config'; ``
 import Height from '@/componen/Height';
+import tokenCreate from '@/componen/tokenCreate';
 
 
 const Tambah_rambu_rambu: React.FC = () => {
     const editorRef = useRef<any>(null);
 
     const [namaRambu, setNamaRambu] = useState<string>("");
-
+    const [deskripsi, setDeskripsi] = useState<string>('');
     const [src, setSrc] = useState<any>();
     const [width, setWidth] = useState<any>();
     const [height, setHeight] = useState<any>();
@@ -43,7 +43,8 @@ const Tambah_rambu_rambu: React.FC = () => {
             formData,
             {
                 headers: {
-                    "Content-Type": "multipart/form-data"
+                    "Content-Type": "multipart/form-data",
+                    Authorization: tokenCreate(),
                 }
             }
         ).then((respon: AxiosResponse<any, any>) => {
@@ -54,6 +55,7 @@ const Tambah_rambu_rambu: React.FC = () => {
             }
         })
     }
+
 
     return (<><div>
         <div className="az-content-breadcrumb">
@@ -80,7 +82,7 @@ const Tambah_rambu_rambu: React.FC = () => {
                     <form onSubmit={_save}>
                         <div className="mb-3">
                             <label htmlFor="exampleInputEmail1" className="form-label">Nama Rambu</label>
-                            <input onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                            <input value={namaRambu} onChange={(e: ChangeEvent<HTMLInputElement>) => {
                                 setNamaRambu(e.target.value)
                             }} type="text" placeholder="Misal Helm" className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" />
                             <div id="emailHelp" className="form-text">Masukkan nama peralatan K3</div>
@@ -88,7 +90,7 @@ const Tambah_rambu_rambu: React.FC = () => {
 
                         <div className="mb-3">
                             <label htmlFor="exampleInputEmail1" className="form-label">Warna Rambu</label>
-                            <select required onChange={(e) => {
+                            <select defaultValue={warna} required onChange={(e) => {
                                 setWarna(e.target.value);
                             }} className='form-control'>
                                 <option value="">Pilih Warna Rambu</option>

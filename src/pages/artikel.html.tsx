@@ -7,6 +7,8 @@ import NoData from '@/componen/NoData';
 import { useMenu } from '@/utils/MenuContext';
 import MenuAktif from '@/utils/MenuAktif';
 import LoadingTable from '@/componen/LoadingTable';
+import Head from 'next/head';
+import tokenCreate from '@/componen/tokenCreate';
 interface data {
     id_artikel: string,
     judul: string,
@@ -20,23 +22,47 @@ const Artikel: React.FC = () => {
     const router: NextRouter = useRouter();
     const _getData = () => {
         setLoading(true);
-        axios.get(baseUrl("admin/artikel"))
+        axios.get(baseUrl("admin/artikel"), {
+            headers: {
+                Authorization: tokenCreate(),
+            }
+        })
 
             .then((respon: AxiosResponse<any, any>) => {
-                setData(respon.data.data);
-                setLoading(false);
+                if (respon.data.status != "not_authorization") {
+                    setData(respon.data.data);
+                    setLoading(false);
+                }
+                else {
+                    alert("Token tidak benar")
+                    router.push("/login.html");
+                }
+
+
 
             })
     }
     const _deleteData = (id: string) => {
         const x = window.confirm("Apakah anda ingin menghapus data ini?");
         if (x)
-            axios.delete(baseUrl("admin/artikel/" + id))
+            axios.delete(baseUrl("admin/artikel/" + id), {
+                headers: {
+                    Authorization: tokenCreate(),
+                }
+            })
                 .then((respon: AxiosResponse<any, any>) => {
-                    if (respon.data.status == "data_terhapus") {
-                        alert("Data terhaspu")
-                        setReload(reload + 1);
+                    if (respon.data.status != "not_authorization") {
+                        if (respon.data.status == "data_terhapus") {
+                            alert("Data terhaspu")
+                            setReload(reload + 1);
+                        }
                     }
+                    else {
+                        alert("Token tidak benar")
+                        router.push("/login.html");
+                    }
+
+
                 })
     }
     const { setMenu } = useMenu();
@@ -45,6 +71,7 @@ const Artikel: React.FC = () => {
 
     }, [reload])
     return (<>
+        <Head><title>Artikel Keselamatan</title></Head>
         <MenuAktif menu="artikel" />
         <div className="az-content-breadcrumb">
             <span><Link href="/">Dashboard</Link></span>
@@ -86,7 +113,11 @@ const Artikel: React.FC = () => {
                             </td>
                             <td>{list.post_by}
                                 <div style={{ textAlign: "right" }}>
-                                    <button className='btn btn-warning btn-sm'>Edit </button>
+                                    <button
+                                        onClick={() => {
+                                            router.push("/artikel/" + list.id_artikel + "/edit-artikel.html");
+                                        }}
+                                        className='btn btn-warning btn-sm'>Edit </button>
                                     {" "}
                                     <button onClick={(e) => {
                                         _deleteData(list.id_artikel);

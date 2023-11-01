@@ -12,10 +12,28 @@ import { baseUrl } from "@/utils/config";
 
 import Cropper from "react-cropper";
 import "cropperjs/dist/cropper.css";
+import { GetServerSideProps, GetStaticPaths, GetStaticProps } from "next";
+import { Context } from "vm";
+import { off } from "process";
 import tokenCreate from "@/componen/tokenCreate";
 
-const Tambah_pengertian: React.FC = () => {
+interface dataProps {
+    id: string
+}
+
+
+interface dataRespon {
+    id_pengertian: string, judul: string, isi: string
+}
+
+
+interface arLocation {
+    data: string[],
+}
+
+const Edit_pengertian: React.FC<dataProps> = ({ id }) => {
     const router = useRouter();
+    const c: string[] | [] = typeof window !== "undefined" ? window.location.pathname.split("/") : [];
 
 
     const [src, setSrc] = useState();
@@ -35,6 +53,7 @@ const Tambah_pengertian: React.FC = () => {
         e.preventDefault();
         const formdata: any = new FormData();
         formdata.append("judul", judul);
+        formdata.append("id_pengertian", c[2]);
         formdata.append("isi", editorRef.current.getContent());
         formdata.append("foto", img);
         formdata.append("x", x);
@@ -57,16 +76,10 @@ const Tambah_pengertian: React.FC = () => {
                     }
                 }
             ).then((respon: AxiosResponse<any, any>) => {
-                if (respon.data.status != "not_authorization") {
-                    if (respon.data.status == "sukses") {
-                        alert("Data berhasil di simpan");
-                        router.push("/pengertian.html");
-                    }
-                }
+                if (respon.data.status == "sukses") {
+                    alert("Data berhasil di simpan");
+                    router.push("/pengertian.html");
 
-                else {
-                    alert("Token tidak benar")
-                    router.push("/login.html");
                 }
             })
     }
@@ -76,8 +89,36 @@ const Tambah_pengertian: React.FC = () => {
             setDeskripsi(editorRef.current.getContent());
         }
     };
-    useEffect(() => {
 
+
+
+    const [dataMap, setDataMap] = useState<dataRespon>();
+    const load_data = () => {
+        axios.get(baseUrl("admin/pengertian/" + c[2]), {
+            headers: {
+                Authorization: tokenCreate(),
+            }
+        }).then(
+            (respon: AxiosResponse<any, any>) => {
+                if (respon.data.status != "not_authorization") {
+                    setDataMap(respon.data.data);
+                    setJudul(respon.data.data.judul);
+                    setDeskripsi(respon.data.data.isi)
+                }
+
+                else {
+                    alert("Token tidak benar")
+                    router.push("/login.html");
+                }
+
+            }
+        );
+    }
+
+    useEffect(() => {
+        if (c[3] == "edit-pengertian.html") {
+            load_data();
+        }
     }, [])
 
     return (<>
@@ -103,7 +144,7 @@ const Tambah_pengertian: React.FC = () => {
                     <div>
                         <form onSubmit={_handleForm}>
                             <TextField
-
+                                value={judul}
                                 required
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                     setJudul(e.target.value);
@@ -117,7 +158,7 @@ const Tambah_pengertian: React.FC = () => {
                                 apiKey="vey2226sscpy44f23ngqtzej83xdwbmc0u7tyy2snygmddb8"
                                 onInit={(evt, editor) => editorRef.current = editor}
 
-                                initialValue=""
+                                initialValue={deskripsi}
                                 init={{
                                     height: 200,
                                     menubar: false,
@@ -153,7 +194,7 @@ const Tambah_pengertian: React.FC = () => {
                                 setCrop(true);
                             }}
                                 accept="image/png, image/gif, image/jpeg"
-                                type="file" required />
+                                type="file" />
                             <br />
                             <br />
                             <button className="btn btn-success">Simpan</button>
@@ -199,4 +240,4 @@ const Tambah_pengertian: React.FC = () => {
     </>);
 }
 
-export default Tambah_pengertian;
+export default Edit_pengertian;
