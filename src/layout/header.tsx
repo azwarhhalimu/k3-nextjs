@@ -21,8 +21,8 @@ const Header: React.FC = () => {
             </div>
             <div className="az-header-menu">
                 <div className="az-header-menu-header">
-                    <a href="/" className="az-logo"><span /> azia</a>
-                    <a href="#" className="close">×</a>
+                    <Link href="/" className="az-logo"><span /> azia</Link>
+                    <Link href="#" className="close">×</Link>
                 </div>
                 <ul className="nav">
                     <li className={_menu("dashboard")}>
